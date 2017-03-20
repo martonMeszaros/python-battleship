@@ -87,3 +87,11 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+
+
+.idea/*
+.vscode/*
+__pycache__/*
+*.iml
+unicurses.py
