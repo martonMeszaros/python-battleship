@@ -1,4 +1,4 @@
-import sys
+from sys import argv
 
 from unicurses import *
 
@@ -31,15 +31,15 @@ def update_attack_screen(
     press_any_key_to_continue(panel, TEXT_AREA)
 
 
-def main(argv):
+def main():
     """Main function."""
-    # check terminal colors
+    # Check if terminal can display colors.
     if not has_colors():
         print("Your terminal doesn't support colors!")
         print("It's a sad day in terminal gaming :(")
         return 0
 
-    # help screen (argument: help)
+    # Display a help screen if the arugment "help" has been found.
     if "help" in argv:
         endwin()
         print("Accepted arguments:")
@@ -53,207 +53,150 @@ def main(argv):
         print("(input won't be shown)")
         return
 
-    # check arguments
+    # Check arguments
     mode_one_player = True if "1player" in argv else False
     mode_guided = True if "guided" in argv else False
     mode_debug = True if "debug" in argv else False
     mode_spread = True if "spread" in argv else False
+    set_ships = True if "set-ships" in argv else False
 
     try:
-        # TITLE SCREEN
+        # Title screen display
         full_window_panel = new_panel(FULL_WINDOW)  # container for FULL_WINDOW
-        box(FULL_WINDOW)  # borders FULL_WINDOW
+        box(FULL_WINDOW)
         write_text(FULL_WINDOW, "BATTLESHIP", A_BOLD)
-
-        if mode_one_player:  # number of players
+        if mode_one_player:
             write_text(FULL_WINDOW, "One player mode", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 1))
         else:
             write_text(FULL_WINDOW, "Two player mode", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 1))
 
-        if mode_guided:  # guided attacks
+        if mode_guided:
             write_text(FULL_WINDOW, "Guided attacks: on", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 2))
         else:
             write_text(FULL_WINDOW, "Guided attacks: off", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 2))
 
-        if mode_spread:  # spreaded ships
+        if mode_spread:
             write_text(FULL_WINDOW, "Ship spread: on", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 3))
         else:
             write_text(FULL_WINDOW, "Ship spread: off", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 3))
-        
-        if mode_debug:  # debugging
-            write_text(FULL_WINDOW, "Debugging", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 4))
-            win_condition = 2  # set win condition to sinking only two ships
-        else:
-            win_condition = NUM_OF_SHIPS # set win condition to singing all ships
 
+        if mode_debug:
+            write_text(FULL_WINDOW, "Debugging", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 4))
         press_any_key_to_continue(full_window_panel, FULL_WINDOW)
 
-        # PLAYER ONE SHIP PLACEMENT
+        # Choosing ship size
+        missing_ships = [2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5]
+        win_condition = len(missing_ships)
+        if set_ships:
+            pass  # CHANGE
+        if debug:
+            win_condition = 2
+
+        # Player one ship placement
         write_text(FULL_WINDOW, "Player one's turn to place ships!")
         press_any_key_to_continue(full_window_panel, FULL_WINDOW)
-        text_area_panel = new_panel(TEXT_AREA) # container for TEXT_AREA
+        text_area_panel = new_panel(TEXT_AREA)  # container for TEXT_AREA
+        # Only declared now to not interfere with full_window_panel.
 
-        player_one_ships = ship_placement(mode_spread)
+        player_one_ships = ship_placement(missing_ships, mode_spread)  # CHANGED PARAMETER ORDERING
         map_player_one_ships = init_map_placed_ships(player_one_ships)
 
-        # PLAYER TWO SHIP PLACEMENT
-        write_text(FULL_WINDOW, "Player two's turn to place ships!")
-        press_any_key_to_continue(full_window_panel, FULL_WINDOW)
-        top_panel(text_area_panel)
+        # Player two ship placement
+        # top_panel(text_area_panel)
 
-        player_two_ships = ship_placement(mode_spread)
-        map_player_two_ships = init_map_placed_ships(player_two_ships)
+        # Attack phase
 
-        # ATTACK PHASE
-        any_player_won = False
-        player_victorious = 0
+        # player_won is False by default, but is set to
+        # 1 or 2 depending on who wins
+        player_won = False
 
+        # Player one variables
+        map_player_one_attacks = init_map_blank()
         player_one_ships_sunk = 0
         player_one_successful_attacks = []
         player_one_missed_attacks = []
+        player_one_near_attacks = [] if mode_guided else None
 
+        # Player two variables
+        map_player_two_attacks = init_map_blank()
         player_two_ships_sunk = 0
         player_two_successful_attacks = []
         player_two_missed_attacks = []
+        player_two_near_attacks = [] if mode_guided else None
 
-        map_player_one_attacks = init_map_blank()
-        map_player_two_attacks = init_map_blank()
-
-        if mode_guided:
-            player_one_near_attacks = []
-            player_two_near_attacks = []
-
-        while not any_player_won:
-            # PLAYER ONE ATTACK
+        while not player_won:
+            # Player one attack
             write_text(FULL_WINDOW, "Player one's turn to attack!")
             press_any_key_to_continue(full_window_panel, FULL_WINDOW)
             top_panel(text_area_panel)
 
-            if mode_guided:  # whether to display near successful attacks
-                attack_coord = attack(player_one_successful_attacks, player_one_missed_attacks, map_player_one_ships, player_one_near_attacks)
-            else:
-                attack_coord = attack(player_one_successful_attacks, player_one_missed_attacks, map_player_one_ships)
+            attack_coord = attack(  # CHANGED PARAMETER ORDER
+                PLAYER_ONE, player_one_successful_attacks, player_one_missed_attacks,
+                player_one_near_attacks, map_player_one_ships)
 
+            # Check if attack is successful. If so:
+            # Add the coord to player_one_successful_attacks,
+            # Write damage to map_player_two_ships,
+            # Check if a ship was sunk. If so:
+            # Increase player_one_ships_sunk
             successful_attack = False
-            for ship in player_two_ships:  # check all enemy ships
-                if attack_coord in ship:  # attack hits a ship
-                    if attack_coord not in player_one_successful_attacks:  # haven't already hit this spot
+            for ship in player_two_ships:
+                if attack_coord in ship:
+                    # Haven't already hit this spot
+                    if attack_coord not in player_one_successful_attacks:
                         player_one_successful_attacks.append(attack_coord)
-                        # write attack to enemy's ship map
-                        mvwaddstr(map_player_two_ships, attack_coord[0], attack_coord[1] - 1, "X" * COORD_WIDTH, color_pair(RED_ON_WHITE) + A_BOLD)
-
-                        # checks if a ship is sunken with current attack
+                        # Write attack to map_player_two_ships
+                        mvwaddstr(
+                            map_player_two_ships,
+                            attack_coord[0], attack_coord[1] - 1,
+                            "X" * COORD_WIDTH, color_pair(RED_ON_WHITE) + A_BOLD)
+                        # Checks if a ship is sunken with current attack
                         ship_sunk = True
-                        for ship_coord in ship:  # check every coord in the hit ship
+                        for ship_coord in ship:
                             if ship_coord not in player_one_successful_attacks:
                                 ship_sunk = False
                                 break
                         if ship_sunk:
                             player_one_ships_sunk += 1
-
                         successful_attack = True
-                    break
+                    break  # Doesn't need to check further ships
 
             if not successful_attack:
-                ship_sunk = False
+                ship_sunk = False  # CAN BE DELETED
                 if mode_guided:
-                    for ship in player_two_ships:  # check all enemy ships
-                        for ship_coord in ship:  # check all coords in current ship
-                            # attack next to a ship
-                            if (attack_coord[0] == ship_coord[0] and (attack_coord[1] == ship_coord[1] - X_SHIFT or attack_coord[1] == ship_coord[1] + X_SHIFT)) or ((attack_coord[0] == ship_coord[0] - Y_SHIFT or attack_coord[0] == ship_coord[0] + Y_SHIFT) and attack_coord[1] == ship_coord[1]):
+                    # Check if the attack is next to a ship
+                    for ship in player_two_ships:
+                        for ship_coord in ship:
+                            if (
+                                    attack_coord[0] == ship_coord[0] and (
+                                        attack_coord[1] == ship_coord[1] - X_SHIFT or
+                                        attack_coord[1] == ship_coord[1] + X_SHIFT)
+                                    ) or (
+                                    attack_coord[1] == ship_coord[1] and (
+                                        attack_coord[0] == ship_coord[0] - Y_SHIFT or
+                                        attack_coord[0] == ship_coord[0] + Y_SHIFT)):
+                                # Attack was next to a ship
                                 player_one_near_attacks.append(attack_coord)
-                                if attack_coord in player_one_missed_attacks:  # if attack is in missed attacks (from else), remove it
-                                    for i in range(player_one_missed_attacks.count(attack_coord)):
-                                        player_one_missed_attacks.remove(attack_coord)
                                 break
                             else:
                                 player_one_missed_attacks.append(attack_coord)
-
+                                break
                 else:
                     player_one_missed_attacks.append(attack_coord)
-
             del successful_attack
 
             # update screen
-            if mode_guided:
-                update_attack_screen(text_area_panel, player_one_successful_attacks, player_one_missed_attacks, player_one_near_attacks, ship_sunk)
-            else:
-                update_attack_screen(text_area_panel, player_one_successful_attacks, player_one_missed_attacks, ship_sunk=ship_sunk)
+            update_attack_screen(text_area_panel, player_one_successful_attacks, player_one_missed_attacks, player_one_near_attacks, ship_sunk)
+            update_attack_screen(  # CHANGED PARAMETER ORDER
+                PLAYER_ONE, text_area_panel, player_one_successful_attacks,
+                player_one_missed_attacks, player_one_near_attacks, ship_sunk)
 
             # check if player won
             if player_one_ships_sunk == win_condition:
-                write_text(FULL_WINDOW, "Player one won!", A_BOLD)
-                press_any_key_to_continue(full_window_panel, FULL_WINDOW)
-                endwin()
-                return 0
-            del ship_sunk
-
-            # PLAYER TWO ATTACK
-            write_text(FULL_WINDOW, "Player two's turn to attack!")
-            press_any_key_to_continue(full_window_panel, FULL_WINDOW)
-            top_panel(text_area_panel)
-
-            if mode_guided:  # whether to display near successful attacks
-                attack_coord = attack(player_two_successful_attacks, player_two_missed_attacks, map_player_two_ships, player_two_near_attacks, 2)
-            else:
-                attack_coord = attack(player_two_successful_attacks, player_two_missed_attacks, map_player_two_ships, player=2)
-
-            successful_attack = False
-            for ship in player_one_ships:  # check all enemy ships
-                if attack_coord in ship:  # attack hits a ship
-                    if attack_coord not in player_two_successful_attacks:  # haven't already hit this spot
-                        player_two_successful_attacks.append(attack_coord)
-                        # write attack to enemy's ship map
-                        mvwaddstr(map_player_one_ships, attack_coord[0], attack_coord[1] - 1, "X" * COORD_WIDTH, color_pair(4) + A_BOLD)
-
-                        # checks if a ship is sunken with current attack
-                        ship_sunk = True
-                        for ship_coord in ship:  # check every coord in the hit ship
-                            if ship_coord not in player_two_successful_attacks:
-                                ship_sunk = False
-                                break
-                        if ship_sunk:
-                            player_two_ships_sunk += 1
-
-                        successful_attack = True
-                    break
-
-            if not successful_attack:
-                ship_sunk = False
-                if mode_guided:
-                    for ship in player_one_ships:  # check all enemy ships
-                        for ship_coord in ship:  # check all coords in current ship
-                            # attack next to a ship
-                            if (attack_coord[0] == ship_coord[0] and (attack_coord[1] == ship_coord[1] - X_SHIFT or attack_coord[1] == ship_coord[1] + X_SHIFT)) or ((attack_coord[0] == ship_coord[0] - Y_SHIFT or attack_coord[0] == ship_coord[0] + Y_SHIFT) and attack_coord[1] == ship_coord[1]):
-                                player_two_near_attacks.append(attack_coord)
-                                if attack_coord in player_two_missed_attacks:  # if attack is in missed attacks (from else), remove it
-                                    for i in range(player_two_missed_attacks.count(attack_coord)):
-                                        player_two_missed_attacks.remove(attack_coord)
-                                break
-                            else:
-                                player_two_missed_attacks.append(attack_coord)
-
-                else:
-                    player_two_missed_attacks.append(attack_coord)
-
-            del successful_attack
-
-            # update screen
-            if mode_guided:
-                update_attack_screen(text_area_panel, player_two_successful_attacks, player_two_missed_attacks, player_two_near_attacks, ship_sunk, 2)
-            else:
-                update_attack_screen(text_area_panel, player_two_successful_attacks, player_two_missed_attacks, ship_sunk=ship_sunk, player=2)
-
-            # check if player won
-            if player_two_ships_sunk == win_condition:
-                write_text(FULL_WINDOW, "Player two won!", A_BOLD)
-                press_any_key_to_continue(full_window_panel, FULL_WINDOW)
-                endwin()
-                return 0
-            del ship_sunk
+                player_won = PLAYER_ONE
 
     except KeyboardInterrupt:
         endwin()
 
 if __name__ == "__main__":
-    main(sys.argv)
+    main()
