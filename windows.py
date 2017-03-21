@@ -1,18 +1,21 @@
+"""
+Contains setup for curses objects
+and color pairs.
+"""
 from unicurses import *
 
 from globals import *
-
 
 
 def init_curses():
     """Calls curs_set(False),
     start_color(), noecho() and
     initializes color pairs."""
-    curs_set(False) # hides cursor
-    start_color() # enables colors
-    noecho() # turns off input echoing
+    curs_set(False)  # Hides cursor
+    start_color()  # Enables colors
+    noecho()  # Turns off input echoing
 
-    # COLORS
+    # Color pair initialization
     init_pair(BLACK, COLOR_BLACK, COLOR_BLACK)
     init_pair(BLUE, COLOR_BLUE, COLOR_BLACK)
     init_pair(RED, COLOR_RED, COLOR_BLACK)
@@ -23,13 +26,12 @@ def init_curses():
     init_pair(WHITE_ON_RED, COLOR_WHITE, COLOR_RED)
 
 
-
 def init_map_blank(num_lines=21, num_cols=43, y_pos=1, x_pos=1):
     """Initializes blank map."""
     window = newwin(num_lines, num_cols, y_pos, x_pos)
     window_y, window_x = getmaxyx(window)
-    first_vline_x = 3 # x index of first vertical line
-    first_hline_y = 1 # y index of first horizontal line
+    first_vline_x = 3  # x index of first vertical line
+    first_hline_y = 1  # y index of first horizontal line
 
     # x-axis printing
     mvwaddstr(window, 0, 0, " \\\\  A   B   C   D   E   F   G   H   I   J", A_BOLD)
@@ -38,12 +40,12 @@ def init_map_blank(num_lines=21, num_cols=43, y_pos=1, x_pos=1):
         for x_coord in range(window_x):
             # y-axis
             if y_coord % Y_SHIFT == 0 and x_coord == 0:
-                if y_coord == 0: # \ symbol
+                if y_coord == 0:  # \ symbol
                     mvwaddstr(window, y_coord, x_coord, "\\", A_BOLD)
-                elif int(y_coord / 2) < 10: # 1-9
-                    mvwaddstr(window, y_coord, x_coord, " " + str(int(y_coord / 2)), A_BOLD)
-                else: # 10
-                    mvwaddstr(window, y_coord, x_coord, str(int(y_coord / 2)), A_BOLD)
+                elif y_coord // 2 < 10:  # 1-9
+                    mvwaddstr(window, y_coord, x_coord, " " + str(y_coord // 2), A_BOLD)
+                else:  # 10
+                    mvwaddstr(window, y_coord, x_coord, str(y_coord // 2), A_BOLD)
             # verical lines
             if x_coord >= first_vline_x and ((x_coord - first_vline_x) % X_SHIFT) == 0:
                 mvwaddstr(window, y_coord, x_coord, "|", color_pair(1) + A_BOLD)
@@ -56,7 +58,6 @@ def init_map_blank(num_lines=21, num_cols=43, y_pos=1, x_pos=1):
     return window
 
 
-
 def init_text_area(container, sibling):
     """Initializes text area."""
     container_x = getmaxyx(container)[1]
@@ -66,11 +67,9 @@ def init_text_area(container, sibling):
     return window
 
 
-
-# STANDARD SCREEN
-stdscr = initscr() # start the unicurses module
+stdscr = initscr()  # Standard screen setup
 init_curses()
-keypad(stdscr, True) # lets stdscr have arrow key inputs
+keypad(stdscr, True)  # Lets stdscr have arrow key inputs
 
 FULL_WINDOW = newwin(getmaxyx(stdscr)[0], getmaxyx(stdscr)[1], 0, 0)
 

@@ -1,3 +1,6 @@
+"""
+A single ship placement cycle in ship_placement()
+"""
 from unicurses import *
 
 from globals import *
@@ -65,9 +68,14 @@ def write_placable_ship(line, missing_ships, size, selected_ship_size):
     # Currently selected ship is displayed
     # in yellow, otherwise white
     if size == selected_ship_size:
-        waddstr(TEXT_AREA, CH_FULL_BLOCK * size * COORD_WIDTH + CH_FULL_BLOCK * (size - 1), color_pair(YELLOW) + A_BOLD)
+        waddstr(
+            TEXT_AREA,
+            CH_FULL_BLOCK * size * COORD_WIDTH + CH_FULL_BLOCK * (size - 1),
+            color_pair(YELLOW) + A_BOLD)
     else:
-        waddstr(TEXT_AREA, CH_FULL_BLOCK * size * COORD_WIDTH + CH_FULL_BLOCK * (size - 1))
+        waddstr(
+            TEXT_AREA,
+            CH_FULL_BLOCK * size * COORD_WIDTH + CH_FULL_BLOCK * (size - 1))
 
 
 def ship_placement(ships_missing, mode_spread):

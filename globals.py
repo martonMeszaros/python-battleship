@@ -1,12 +1,14 @@
+"""
+Contains some variables
+and functions used in more modules.
+"""
 from unicurses import *
 
 PLAYER_ONE = 1
 PLAYER_TWO = 2
 
-
-
-AXIS_LENGTH = 10 # how many coords there are on an axis
-COORD_WIDTH = 3 # a single coords is not displayed on one collum of a window
+AXIS_LENGTH = 10  # how many coords there are on an axis
+COORD_WIDTH = 3  # a single coords is not displayed on one collum of a window
 # variebes for orientation
 HORIZONTAL = 0
 VERTICAL = 1
@@ -40,19 +42,22 @@ YELLOW_ON_WHITE = 7
 WHITE_ON_RED = 8
 
 # https://unicode-table.com/en/blocks/block-elements/
-CH_FULL_BLOCK = "\u2588" # █
-CH_MED_SHADE_BLOCK = "\u2592" # ▒ unfortunately, doesn't have a clear display in terminal
-CH_CURRENCY_SIGN = "\u00A4" # ¤
+CH_FULL_BLOCK = "\u2588"  # █
+CH_MED_SHADE_BLOCK = "\u2592"  # ▒ unfortunately, doesn't have a clear display in terminal
+CH_CURRENCY_SIGN = "\u00A4"  # ¤
+
 
 def clear_window(window):
     """Clears the content of a window."""
     for y_pos in range(getmaxyx(window)[0]):
         mvwaddstr(window, y_pos, 0, " " * getmaxyx(window)[1])
 
+
 def scr_refresh():
     """Refreshes panels."""
     update_panels()
     doupdate()
+
 
 def write_inst(window, line, key, text, x_pos=0):
     """Only used to tidy up ship_placement() function.
@@ -64,17 +69,23 @@ def write_inst(window, line, key, text, x_pos=0):
     waddstr(window, "]", A_BOLD)
     waddstr(window, " " + text)
 
+
 def write_text(window, text, text_formatting="NO_USE", y_pos="middle", x_pos="center"):
     """Writes text to a window
     at the specified location.
     (default: middle center)"""
-    mvwaddstr(window, int(getmaxyx(window)[0] / 2 - 1) if y_pos == "middle" else y_pos, int(getmaxyx(window)[1] / 2 - len(text) / 2 - 1) if x_pos == "center" else x_pos, text, "NO_USE" if text_formatting is "NO_USE" else text_formatting)
+    mvwaddstr(
+        window,
+        getmaxyx(window)[0] // 2 - 1 if y_pos == "middle" else y_pos,
+        getmaxyx(window)[1] // 2 - len(text) // 2 - 1 if x_pos == "center" else x_pos,
+        text, "NO_USE" if text_formatting is "NO_USE" else text_formatting)
+
 
 def press_any_key_to_continue(panel, window):
     """Writes "press any key to continue" to
     a window, refreshes screen and waits for input.
     (should only use FULL_WINDOW)"""
-    write_text(window, "press any key to continue", A_DIM, int(getmaxyx(window)[0] - 2))
+    write_text(window, "press any key to continue", A_DIM, getmaxyx(window)[0] - 2)
     top_panel(panel)
     scr_refresh()
     getch()

@@ -1,3 +1,6 @@
+"""
+Contains a single attack sequence in attack().
+"""
 from unicurses import *
 
 from globals import *
@@ -48,7 +51,7 @@ def init_map_placed_attacks(successful_attacks, missed_attacks, near_attacks, su
                 window, an_attack[0], an_attack[1] - 1,
                 "X" * COORD_WIDTH, color_pair(RED) + A_BOLD
             )
-    
+
     if len(sunken_ships) > 0:
         for ship in sunken_ships:
             draw_ship(window, ship, CH_FULL_BLOCK, RED)
@@ -74,7 +77,7 @@ def attack(player, successful_attacks, missed_attacks, near_attacks, own_ships_m
     else:
         mvwaddstr(TEXT_AREA, 0, 0, "Player two")
 
-    # INPUT INSTRUCTIONS
+    # TEXT_AREA instructions
     write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 3, "S", "to see your own ships")
     write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 2, "ARROW KEYS", "to move attack position")
     write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 1, "ENTER", "to attack")
@@ -117,5 +120,5 @@ def attack(player, successful_attacks, missed_attacks, near_attacks, own_ships_m
             returning = False
             while not returning:
                 user_input = getch()
-                if user_input == 115:
-                    break
+                if user_input == 115:  # S
+                    returning = True

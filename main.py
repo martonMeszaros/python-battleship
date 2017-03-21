@@ -1,3 +1,6 @@
+"""
+Python Battleship main
+"""
 from sys import argv
 
 from unicurses import *
@@ -15,7 +18,7 @@ def update_attack_screen(
     clear_window(TEXT_AREA)
 
     temp_map = init_map_placed_attacks(successful_attacks, missed_attacks, near_attacks, sunken_ships)
-    temp_map_panel = new_panel(temp_map)  # container for temp_map
+    temp_map_panel = new_panel(temp_map)  # Container for temp_map
 
     if player == 1:
         write_text(TEXT_AREA, "Player one", y_pos=0, x_pos=0)
@@ -34,11 +37,12 @@ def main():
     if not has_colors():
         print("Your terminal doesn't support colors!")
         print("It's a sad day in terminal gaming :(")
-        return 0
+        return
 
     # Display a help screen if the arugment "help" has been found.
     if "help" in argv:
         endwin()
+        print()
         print("Accepted arguments:")
         print("1player - visual difference in title screen")
         print("guided - near-hit attack have different color")
@@ -48,6 +52,7 @@ def main():
         print("Use Ctrl+C to exit the game")
         print("If you encounter a bug that breaks the game, type 'reset' into the terminal")
         print("(input won't be shown)")
+        print()
         return
 
     # Check arguments
@@ -59,32 +64,30 @@ def main():
 
     try:
         # Title screen display
-        full_window_panel = new_panel(FULL_WINDOW)  # container for FULL_WINDOW
+        full_window_panel = new_panel(FULL_WINDOW)  # Container for FULL_WINDOW
         box(FULL_WINDOW)
         write_text(FULL_WINDOW, "BATTLESHIP", A_BOLD)
         if mode_one_player:
-            write_text(FULL_WINDOW, "One player mode", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 1))
+            write_text(FULL_WINDOW, "One player mode", A_DIM, getmaxyx(FULL_WINDOW)[0] // 2 + 1)
         else:
-            write_text(FULL_WINDOW, "Two player mode", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 1))
-
+            write_text(FULL_WINDOW, "Two player mode", A_DIM, getmaxyx(FULL_WINDOW)[0] // 2 + 1)
         if mode_guided:
-            write_text(FULL_WINDOW, "Guided attacks: on", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 2))
+            write_text(FULL_WINDOW, "Guided attacks: on", A_DIM, getmaxyx(FULL_WINDOW)[0] // 2 + 2)
         else:
-            write_text(FULL_WINDOW, "Guided attacks: off", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 2))
-
+            write_text(FULL_WINDOW, "Guided attacks: off", A_DIM, getmaxyx(FULL_WINDOW)[0] // 2 + 2)
         if mode_spread:
-            write_text(FULL_WINDOW, "Ship spread: on", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 3))
+            write_text(FULL_WINDOW, "Ship spread: on", A_DIM, getmaxyx(FULL_WINDOW)[0] // 2 + 3)
         else:
-            write_text(FULL_WINDOW, "Ship spread: off", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 3))
-
+            write_text(FULL_WINDOW, "Ship spread: off", A_DIM, getmaxyx(FULL_WINDOW)[0] // 2 + 3)
         if mode_debug:
-            write_text(FULL_WINDOW, "Debugging", A_DIM, int(getmaxyx(FULL_WINDOW)[0] / 2 + 4))
+            write_text(FULL_WINDOW, "Debugging", A_DIM, getmaxyx(FULL_WINDOW)[0] // 2 + 4)
         press_any_key_to_continue(full_window_panel, FULL_WINDOW)
 
         missing_ships = [2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5]
         win_condition = len(missing_ships)
         # Choosing ship size
         if set_ships:
+            missing_ships = []
             write_text(FULL_WINDOW, "Choose ships", A_BOLD)
             write_inst(
                 FULL_WINDOW, getmaxyx(FULL_WINDOW)[0] - 3, "2-5", "to select ship",
@@ -92,7 +95,6 @@ def main():
             write_inst(
                 FULL_WINDOW, getmaxyx(FULL_WINDOW)[0] - 2, "Enter", "to continue",
                 getmaxyx(FULL_WINDOW)[1] // 2 - len("[ENTER] to continue") // 2 - 1)
-            missing_ships = []
             enter_is_pressed = False
             while not enter_is_pressed:
                 write_text(
@@ -115,10 +117,11 @@ def main():
                         missing_ships.append(5)
                 elif user_input == 10:  # ENTER
                     enter_is_pressed = True
-            missing_ships = [2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5] if missing_ships == [] else missing_ships
+            del enter_is_pressed
+            if missing_ships == []:
+                missing_ships = [2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5]
             win_condition = len(missing_ships)
             clear_window(FULL_WINDOW)
-            del enter_is_pressed
 
         if mode_debug:
             win_condition = 2
@@ -128,15 +131,13 @@ def main():
         press_any_key_to_continue(full_window_panel, FULL_WINDOW)
         text_area_panel = new_panel(TEXT_AREA)  # container for TEXT_AREA
         # Only declared now to not interfere with full_window_panel.
-
         player_one_ships = ship_placement(missing_ships, mode_spread)
         map_player_one_ships = init_map_placed_ships(player_one_ships)
 
         # Player two ship placement
         write_text(FULL_WINDOW, "Player two's turn to place ships!")
         press_any_key_to_continue(full_window_panel, FULL_WINDOW)
-
-        top_panel(text_area_panel)
+        top_panel(text_area_panel)  # needs to bring this in front of full_winddoe_panel
         player_two_ships = ship_placement(missing_ships, mode_spread)
         map_player_two_ships = init_map_placed_ships(player_two_ships)
 
