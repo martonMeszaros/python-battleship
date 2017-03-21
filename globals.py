@@ -3,6 +3,8 @@ from unicurses import *
 PLAYER_ONE = 1
 PLAYER_TWO = 2
 
+
+
 AXIS_LENGTH = 10 # how many coords there are on an axis
 COORD_WIDTH = 3 # a single coords is not displayed on one collum of a window
 # variebes for orientation
@@ -35,6 +37,7 @@ RED_ON_WHITE = 4
 YELLOW = 5
 GREEN = 6
 YELLOW_ON_WHITE = 7
+WHITE_ON_RED = 8
 
 # https://unicode-table.com/en/blocks/block-elements/
 CH_FULL_BLOCK = "\u2588" # █
@@ -51,12 +54,12 @@ def scr_refresh():
     update_panels()
     doupdate()
 
-def write_inst(window, line, key, text):
+def write_inst(window, line, key, text, x_pos=0):
     """Only used to tidy up ship_placement() function.
     Writes instructional text to window.
     (should only use TEXT_AREA)
     E.g.: [key] text"""
-    mvwaddstr(window, line, 0, "[", A_BOLD)
+    mvwaddstr(window, line, x_pos, "[", A_BOLD)
     waddstr(window, key, color_pair(YELLOW) + A_BOLD)
     waddstr(window, "]", A_BOLD)
     waddstr(window, " " + text)

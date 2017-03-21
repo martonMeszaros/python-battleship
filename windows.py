@@ -20,6 +20,7 @@ def init_curses():
     init_pair(YELLOW, COLOR_YELLOW, COLOR_BLACK)
     init_pair(GREEN, COLOR_GREEN, COLOR_BLACK)
     init_pair(YELLOW_ON_WHITE, COLOR_YELLOW, COLOR_WHITE)
+    init_pair(WHITE_ON_RED, COLOR_WHITE, COLOR_RED)
 
 
 

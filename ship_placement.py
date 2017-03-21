@@ -64,20 +64,20 @@ def write_placable_ship(line, missing_ships, size, selected_ship_size):
     waddstr(TEXT_AREA, " * ")
     # Currently selected ship is displayed
     # in yellow, otherwise white
-    if size != selected_ship_size:
+    if size == selected_ship_size:
         waddstr(TEXT_AREA, CH_FULL_BLOCK * size * COORD_WIDTH + CH_FULL_BLOCK * (size - 1), color_pair(YELLOW) + A_BOLD)
     else:
         waddstr(TEXT_AREA, CH_FULL_BLOCK * size * COORD_WIDTH + CH_FULL_BLOCK * (size - 1))
 
 
-def ship_placement(missing_ships, mode_spread):
+def ship_placement(ships_missing, mode_spread):
     """
     Returns a 3 dimensional list of ship coordinates.   \n
     1st level: all ships                                \n
     2nd level: a single ship                            \n
     3rd level: a single pair of coords (y, x) for a ship
     """
-    missing_ships = missing_ships
+    missing_ships = list(ships_missing)
     placed_ships = []  # Return value
     ship = update_ship()
 

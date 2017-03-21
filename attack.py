@@ -5,8 +5,13 @@ from ship_placement import *
 from windows import *
 
 
-def draw_attack(window, y_coord, x_coord):
+def draw_attack(window, y_coord, x_coord, sunken_ships):
     """Draws current attack to window."""
+    attack_coord = [y_coord, x_coord]
+    for ship in sunken_ships:
+        if attack_coord in ship:
+            mvwaddstr(window, y_coord, x_coord, "O", A_BOLD + color_pair(WHITE_ON_RED))
+            return
     mvwaddstr(window, y_coord, x_coord, "O", A_BOLD)
 
 
@@ -15,7 +20,7 @@ def update_attack(y_coord, x_coord):
     return [y_coord, x_coord]
 
 
-def init_map_placed_attacks(successful_attacks, missed_attacks, near_attacks):
+def init_map_placed_attacks(successful_attacks, missed_attacks, near_attacks, sunken_ships):
     """
     Creates a map with successful,
     missed and near attacks displayed.
@@ -43,6 +48,10 @@ def init_map_placed_attacks(successful_attacks, missed_attacks, near_attacks):
                 window, an_attack[0], an_attack[1] - 1,
                 "X" * COORD_WIDTH, color_pair(RED) + A_BOLD
             )
+    
+    if len(sunken_ships) > 0:
+        for ship in sunken_ships:
+            draw_ship(window, ship, CH_FULL_BLOCK, RED)
 
     return window
 
@@ -56,7 +65,7 @@ def map_own_ships_damage(window, enemy_successful_attacks):
                 "X" * COORD_WIDTH, color_pair(RED) + A_BOLD)
 
 
-def attack(player, successful_attacks, missed_attacks, near_attacks, own_ships_map):
+def attack(player, successful_attacks, missed_attacks, near_attacks, own_ships_map, sunken_ships):
     """Returns attack coordinates."""
     attack_coords = update_attack(Y_ORIGIN, X_ORIGIN)
 
@@ -73,9 +82,9 @@ def attack(player, successful_attacks, missed_attacks, near_attacks, own_ships_m
     attacked = False
     while not attacked:
         # Reset temporary display map
-        display_map = init_map_placed_attacks(successful_attacks, missed_attacks, near_attacks)
+        display_map = init_map_placed_attacks(successful_attacks, missed_attacks, near_attacks, sunken_ships)
         map_panel = new_panel(display_map)  # container for display_map
-        draw_attack(display_map, attack_coords[0], attack_coords[1])
+        draw_attack(display_map, attack_coords[0], attack_coords[1], sunken_ships)
         scr_refresh()
 
         # User input listeners
