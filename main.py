@@ -9,15 +9,12 @@ from windows import *
 
 
 def update_attack_screen(
-        panel, successful_attacks, missed_attacks,
-        near_attacks=None, ship_sunk=False, player=1):
+        player, panel, successful_attacks,
+        missed_attacks, near_attacks, ship_sunk):
     """Updates attack sreen after attacking."""
     clear_window(TEXT_AREA)
 
-    if near_attacks is not None:
-        temp_map = init_map_placed_attacks(successful_attacks, missed_attacks, near_attacks)
-    else:
-        temp_map = init_map_placed_attacks(successful_attacks, missed_attacks)
+    temp_map = init_map_placed_attacks(successful_attacks, missed_attacks, near_attacks)
     temp_map_panel = new_panel(temp_map)  # container for temp_map
 
     if player == 1:
@@ -89,7 +86,7 @@ def main():
         win_condition = len(missing_ships)
         if set_ships:
             pass  # CHANGE
-        if debug:
+        if mode_debug:
             win_condition = 2
 
         # Player one ship placement
@@ -98,7 +95,7 @@ def main():
         text_area_panel = new_panel(TEXT_AREA)  # container for TEXT_AREA
         # Only declared now to not interfere with full_window_panel.
 
-        player_one_ships = ship_placement(missing_ships, mode_spread)  # CHANGED PARAMETER ORDERING
+        player_one_ships = ship_placement(missing_ships, mode_spread)
         map_player_one_ships = init_map_placed_ships(player_one_ships)
 
         # Player two ship placement
@@ -130,7 +127,7 @@ def main():
             press_any_key_to_continue(full_window_panel, FULL_WINDOW)
             top_panel(text_area_panel)
 
-            attack_coord = attack(  # CHANGED PARAMETER ORDER
+            attack_coord = attack(
                 PLAYER_ONE, player_one_successful_attacks, player_one_missed_attacks,
                 player_one_near_attacks, map_player_one_ships)
 
@@ -171,7 +168,7 @@ def main():
                                     attack_coord[0] == ship_coord[0] and (
                                         attack_coord[1] == ship_coord[1] - X_SHIFT or
                                         attack_coord[1] == ship_coord[1] + X_SHIFT)
-                                    ) or (
+                                ) or (
                                     attack_coord[1] == ship_coord[1] and (
                                         attack_coord[0] == ship_coord[0] - Y_SHIFT or
                                         attack_coord[0] == ship_coord[0] + Y_SHIFT)):
@@ -186,8 +183,7 @@ def main():
             del successful_attack
 
             # update screen
-            update_attack_screen(text_area_panel, player_one_successful_attacks, player_one_missed_attacks, player_one_near_attacks, ship_sunk)
-            update_attack_screen(  # CHANGED PARAMETER ORDER
+            update_attack_screen(
                 PLAYER_ONE, text_area_panel, player_one_successful_attacks,
                 player_one_missed_attacks, player_one_near_attacks, ship_sunk)
 
