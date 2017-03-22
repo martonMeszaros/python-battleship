@@ -33,6 +33,8 @@ def ai_ship_placement(missing_ships):
             else:
                 origin_x = X_ZERO + X_SHIFT * randint(1, 10)
                 origin_y = Y_OFFSET + Y_SHIFT * randint(0, choosable_coords)
+            if [origin_y, origin_x] in occupied_coords:
+                continue
             ship["coords"] = []
             for nth_coord in range(ship["size"]):
                 if ship["orientation"] == HORIZONTAL:
