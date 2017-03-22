@@ -68,7 +68,11 @@ def map_own_ships_damage(window, enemy_successful_attacks):
                 "X" * COORD_WIDTH, color_pair(RED) + A_BOLD)
 
 
-def attack(player, successful_attacks, missed_attacks, near_attacks, own_ships_map, sunken_ships):
+def attack(
+        player, successful_attacks, missed_attacks,
+        near_attacks, own_ships_map, sunken_ships,
+        ship_sunk_in_previous_round
+):
     """Returns attack coordinates."""
     attack_coords = update_attack(Y_ORIGIN, X_ORIGIN)
 
@@ -76,6 +80,8 @@ def attack(player, successful_attacks, missed_attacks, near_attacks, own_ships_m
         mvwaddstr(TEXT_AREA, 0, 0, "Player one")
     else:
         mvwaddstr(TEXT_AREA, 0, 0, "Player two")
+    if ship_sunk_in_previous_round:
+        mvwaddstr(TEXT_AREA, 4, 0, "Your ship has been sunk!")
 
     # TEXT_AREA instructions
     write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 3, "S", "to see your own ships")

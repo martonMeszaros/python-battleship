@@ -6,6 +6,7 @@ from sys import argv
 from unicurses import *
 
 from globals import *
+from ai import *
 from attack import *
 from ship_placement import *
 from windows import *
@@ -43,11 +44,12 @@ def main():
     if "help" in argv:
         endwin()
         print()
-        print("Accepted arguments:")
+        print("Arguments:")
         print("1player - visual difference in title screen")
         print("guided - near-hit attack have different color")
+        print("set-ships - set the number of ships")
         print("spread - ships can't be placed next to each other")
-        print("debug - only two ships need to be sunk to win the game\n")
+        print("debug - only two ships need to be sunk to win the game (if more are present)\n")
 
         print("Use Ctrl+C to exit the game")
         print("If you encounter a bug that breaks the game, type 'reset' into the terminal")
@@ -87,45 +89,58 @@ def main():
         win_condition = len(missing_ships)
         # Choosing ship size
         if set_ships:
-            missing_ships = []
-            write_text(FULL_WINDOW, "Choose ships", A_BOLD)
-            write_inst(
-                FULL_WINDOW, getmaxyx(FULL_WINDOW)[0] - 3, "2-5", "to select ship",
-                getmaxyx(FULL_WINDOW)[1] // 2 - len("[2-5] to select ship") // 2 - 1)
-            write_inst(
-                FULL_WINDOW, getmaxyx(FULL_WINDOW)[0] - 2, "Enter", "to continue",
-                getmaxyx(FULL_WINDOW)[1] // 2 - len("[ENTER] to continue") // 2 - 1)
             enter_is_pressed = False
             while not enter_is_pressed:
+                write_text(FULL_WINDOW, "Choose ships", A_BOLD)
+                write_inst(
+                    FULL_WINDOW, getmaxyx(FULL_WINDOW)[0] - 4, "2-5", "to remove a ship",
+                    getmaxyx(FULL_WINDOW)[1] // 2 - len("[2-5] to select ship") // 2 - 1)
+                write_inst(
+                    FULL_WINDOW, getmaxyx(FULL_WINDOW)[0] - 3, "U", "to reset list",
+                    getmaxyx(FULL_WINDOW)[1] // 2 - len("[U] to reset list") // 2 - 1)
+                write_inst(
+                    FULL_WINDOW, getmaxyx(FULL_WINDOW)[0] - 2, "Enter", "to continue",
+                    getmaxyx(FULL_WINDOW)[1] // 2 - len("[ENTER] to continue") // 2 - 1)
                 write_text(
-                    FULL_WINDOW, missing_ships, "NO_USE",
-                    getmaxyx(FULL_WINDOW)[0] // 2,
+                    FULL_WINDOW, missing_ships, A_DIM,
+                    getmaxyx(FULL_WINDOW)[0] // 2 + 1,
                     getmaxyx(FULL_WINDOW)[1] // 2 - (len(str(missing_ships)) // 2) - 1)
                 scr_refresh()
                 user_input = getch()
+                mvwaddstr(FULL_WINDOW, 1, 1, user_input)
                 if user_input == 50:  # 2
-                    if missing_ships.count(2) < 5:
-                        missing_ships.append(2)
+                    if len(missing_ships) > 1 and 2 in missing_ships:
+                        missing_ships.remove(2)
                 elif user_input == 51:  # 3
-                    if missing_ships.count(3) < 3:
-                        missing_ships.append(3)
+                    if len(missing_ships) > 1 and 3 in missing_ships:
+                        missing_ships.remove(3)
                 elif user_input == 52:  # 4
-                    if missing_ships.count(4) < 2:
-                        missing_ships.append(4)
+                    if len(missing_ships) > 1 and 4 in missing_ships:
+                        missing_ships.remove(4)
                 elif user_input == 53:  # 5
-                    if missing_ships.count(5) < 1:
-                        missing_ships.append(5)
+                    if len(missing_ships) > 1 and 5 in missing_ships:
+                        missing_ships.remove(5)
+                elif user_input == 117:  # U
+                    missing_ships = [2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5]
                 elif user_input == 10:  # ENTER
                     enter_is_pressed = True
+                clear_window(FULL_WINDOW)
             del enter_is_pressed
-            if missing_ships == []:
-                missing_ships = [2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5]
             win_condition = len(missing_ships)
             clear_window(FULL_WINDOW)
 
         if mode_debug:
-            win_condition = 2
+            win_condition = 2 if len(missing_ships) > 2 else win_condition
 
+        player_two_ships = ai_ship_placement(missing_ships)
+        temp = init_map_blank()
+        for ship in player_two_ships:
+            draw_ship(temp, ship, CH_FULL_BLOCK)
+        temp_panel = new_panel(temp)
+        scr_refresh()
+        getch()
+        endwin()
+        return
         # Player one ship placement
         write_text(FULL_WINDOW, "Player one's turn to place ships!")
         press_any_key_to_continue(full_window_panel, FULL_WINDOW)
@@ -138,7 +153,16 @@ def main():
         write_text(FULL_WINDOW, "Player two's turn to place ships!")
         press_any_key_to_continue(full_window_panel, FULL_WINDOW)
         top_panel(text_area_panel)  # needs to bring this in front of full_winddoe_panel
-        player_two_ships = ship_placement(missing_ships, mode_spread)
+        if mode_one_player:
+            player_two_ships = ai_ship_placement(missing_ships)
+            temp = init_map_blank()
+            for ship in player_two_ships:
+                draw_ship(temp, ship, CH_FULL_BLOCK)
+            temp_panel = new_panel(temp)
+            scr_refresh()
+            getch()
+        else:
+            player_two_ships = ship_placement(missing_ships, mode_spread)
         map_player_two_ships = init_map_placed_ships(player_two_ships)
 
         # Attack phase
@@ -162,6 +186,8 @@ def main():
         player_two_successful_attacks = []
         player_two_missed_attacks = []
         player_two_near_attacks = [] if mode_guided else None
+        
+        ship_sunk = False
 
         while not player_won:
             # Player one attack
@@ -171,7 +197,7 @@ def main():
 
             attack_coord = attack(
                 PLAYER_ONE, player_one_successful_attacks, player_one_missed_attacks,
-                player_one_near_attacks, map_player_one_ships, player_one_ships_sunk)
+                player_one_near_attacks, map_player_one_ships, player_one_ships_sunk, ship_sunk)
 
             # Check if attack is successful. If so:
             # Add the coord to player_one_successful_attacks,
@@ -204,6 +230,10 @@ def main():
 
             if not successful_attack:
                 ship_sunk = False  # CAN BE DELETED
+                mvwaddstr(
+                    map_player_two_ships,
+                    attack_coord[0], attack_coord[1] - 1,
+                    "X" * COORD_WIDTH, color_pair(BLUE) + A_BOLD)
                 if mode_guided:
                     # Check if the attack is next to a ship
                     for ship in player_two_ships:
@@ -218,10 +248,8 @@ def main():
                                         attack_coord[0] == ship_coord[0] + Y_SHIFT)):
                                 # Attack was next to a ship
                                 player_one_near_attacks.append(attack_coord)
-                                break
                             else:
                                 player_one_missed_attacks.append(attack_coord)
-                                break
                 else:
                     player_one_missed_attacks.append(attack_coord)
             del successful_attack
@@ -235,6 +263,7 @@ def main():
             # check if player won
             if player_one_ships_sunk_count == win_condition:
                 player_won = PLAYER_ONE
+                break
 
             # Player two attack
             write_text(FULL_WINDOW, "Player two's turn to attack!")
@@ -243,7 +272,7 @@ def main():
 
             attack_coord = attack(
                 PLAYER_TWO, player_two_successful_attacks, player_two_missed_attacks,
-                player_two_near_attacks, map_player_two_ships, player_two_ships_sunk)
+                player_two_near_attacks, map_player_two_ships, player_two_ships_sunk, ship_sunk)
 
             # Check if attack is successful. If so:
             # Add the coord to player_one_successful_attacks,
@@ -275,6 +304,10 @@ def main():
                     break  # Doesn't need to check further ships
 
             if not successful_attack:
+                mvwaddstr(
+                    map_player_one_ships,
+                    attack_coord[0], attack_coord[1] - 1,
+                    "X" * COORD_WIDTH, color_pair(BLUE) + A_BOLD)
                 ship_sunk = False  # CAN BE DELETED
                 if mode_guided:
                     # Check if the attack is next to a ship
@@ -290,10 +323,8 @@ def main():
                                         attack_coord[0] == ship_coord[0] + Y_SHIFT)):
                                 # Attack was next to a ship
                                 player_two_near_attacks.append(attack_coord)
-                                break
                             else:
                                 player_two_missed_attacks.append(attack_coord)
-                                break
                 else:
                     player_two_missed_attacks.append(attack_coord)
             del successful_attack

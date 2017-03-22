@@ -90,9 +90,10 @@ def ship_placement(ships_missing, mode_spread):
     ship = update_ship()
 
     # TEXT_AREA instructions
-    write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 4, "ARROW KEYS", "to move ship")
-    write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 3, "2-5", "to change ship size")
-    write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 2, "SPACE KEYS", "to change orientation")
+    write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 5, "ARROW KEYS", "to move ship")
+    write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 4, "2-5", "to change ship size")
+    write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 3, "SPACE KEYS", "to change orientation")
+    write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 2, "U", "to undo last ship")
     write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 1, "ENTER", "to place ship")
 
     # Ship placement loop
@@ -195,6 +196,11 @@ def ship_placement(ships_missing, mode_spread):
             # still needs to be placed, not same size
             if 5 in missing_ships and ship["size"] != 5:
                 ship = update_ship(5)
+        # Undo previous ship
+        elif user_input == 117:  # U
+            if len(placed_ships) > 0:
+                missing_ships.append(len(placed_ships[-1]))
+                placed_ships = placed_ships[:-1]
         # Place ship
         elif user_input == 10:  # ENTER
             if can_place:
