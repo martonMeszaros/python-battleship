@@ -1,4 +1,5 @@
-5. When starting to attack, display if one of the players ships have been sunk
+1. when placing ships, give ship of the same time as placed last time
+2. first placable ship should depend on what ships need to be placed (not simply size 2)
 
 + Try AI for ship placement and attack
 + Try adding animation to title screen

@@ -131,16 +131,15 @@ def main():
 
         if mode_debug:
             win_condition = 2 if len(missing_ships) > 2 else win_condition
-
-        player_two_ships = ai_ship_placement(missing_ships)
-        temp = init_map_blank()
-        for ship in player_two_ships:
-            draw_ship(temp, ship, CH_FULL_BLOCK)
-        temp_panel = new_panel(temp)
+        
+        ships = ai_ship_placement(missing_ships)
+        map_temp = init_map_placed_ships(ships)
+        panel_temp = new_panel(map_temp)
         scr_refresh()
         getch()
         endwin()
         return
+
         # Player one ship placement
         write_text(FULL_WINDOW, "Player one's turn to place ships!")
         press_any_key_to_continue(full_window_panel, FULL_WINDOW)
@@ -150,18 +149,12 @@ def main():
         map_player_one_ships = init_map_placed_ships(player_one_ships)
 
         # Player two ship placement
-        write_text(FULL_WINDOW, "Player two's turn to place ships!")
-        press_any_key_to_continue(full_window_panel, FULL_WINDOW)
-        top_panel(text_area_panel)  # needs to bring this in front of full_winddoe_panel
         if mode_one_player:
             player_two_ships = ai_ship_placement(missing_ships)
-            temp = init_map_blank()
-            for ship in player_two_ships:
-                draw_ship(temp, ship, CH_FULL_BLOCK)
-            temp_panel = new_panel(temp)
-            scr_refresh()
-            getch()
         else:
+            write_text(FULL_WINDOW, "Player two's turn to place ships!")
+            press_any_key_to_continue(full_window_panel, FULL_WINDOW)
+            top_panel(text_area_panel)  # needs to bring this in front of full_winddoe_panel
             player_two_ships = ship_placement(missing_ships, mode_spread)
         map_player_two_ships = init_map_placed_ships(player_two_ships)
 
@@ -186,7 +179,7 @@ def main():
         player_two_successful_attacks = []
         player_two_missed_attacks = []
         player_two_near_attacks = [] if mode_guided else None
-        
+
         ship_sunk = False
 
         while not player_won:
