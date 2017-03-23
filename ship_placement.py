@@ -88,6 +88,13 @@ def ship_placement(ships_missing, mode_spread):
     missing_ships = list(ships_missing)
     placed_ships = []  # Return value
     ship = update_ship()
+    if 2 not in missing_ships:
+        if 3 in missing_ships:
+            ship = update_ship(3)
+        elif 4 in missing_ships:
+            ship = update_ship(4)
+        elif 5 in missing_ships:
+            ship = update_ship(5)
 
     # TEXT_AREA instructions
     write_inst(TEXT_AREA, getmaxyx(TEXT_AREA)[0] - 5, "ARROW KEYS", "to move ship")
