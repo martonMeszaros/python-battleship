@@ -131,7 +131,7 @@ def main():
 
         if mode_debug:
             win_condition = 2 if len(missing_ships) > 2 else win_condition
-        
+
         ships = ai_ship_placement(missing_ships)
         map_temp = init_map_placed_ships(ships)
         panel_temp = new_panel(map_temp)

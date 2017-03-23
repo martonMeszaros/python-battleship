@@ -23,8 +23,8 @@ Y_ORIGIN = 10
 # game coords don't match up with displayed window's coords
 X_OFFSET = 4
 Y_OFFSET = 2
-X_ZERO = 5
-Y_ZERO = 3
+X_ZERO = X_OFFSET + 1
+Y_ZERO = Y_OFFSET
 # the space between two game coords
 # kind of unnecessary since same as offsets
 X_SHIFT = 4
