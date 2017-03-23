@@ -7,6 +7,11 @@ from unicurses import *
 PLAYER_ONE = 1
 PLAYER_TWO = 2
 
+UP = 0
+RIGHT = 1
+DOWN = 2
+LEFT = 3
+
 AXIS_LENGTH = 10  # how many coords there are on an axis
 COORD_WIDTH = 3  # a single coords is not displayed on one collum of a window
 # variebes for orientation

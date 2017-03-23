@@ -83,3 +83,165 @@ def ai_ship_placement(missing_ships):
             finished_generating_ships = True
 
     return placed_ships
+
+
+def ai_attack(
+        successful_attacks, missed_attacks, near_attacks,
+        previous_attack, first_successful_attack, previous_direction, tried_directions,
+        sunk_a_ship):
+    x_coord = 0
+    y_coord = 0
+    direction = None
+    # Our previous attack was successful
+    if previous_attack in successful_attacks and not sunk_a_ship:
+        x_coord = previous_attack[1]
+        y_coord = previous_attack[0]
+        # Choosing direction
+        if x_coord == X_ZERO:
+            if previous_direction != LEFT:
+                direction = previous_direction
+            elif previous_direction == LEFT:
+                direction = RIGHT
+            else:
+                if y_coord == Y_ZERO:
+                    choice([RIGHT, DOWN])
+                elif y_coord == Y_MAX:
+                    choice([UP, RIGH])
+                else:
+                    choice([UP, RIGHT, DOWN])
+        elif x_coord == X_MAX:
+            if previous_direction != RIGHT:
+                direction = previous_direction
+            elif previous_direction == RIGHT:
+                direction = LEFT
+            else:
+                if y_coord == Y_ZERO:
+                    choice([LEFT, DOWN])
+                elif y_coord == Y_MAX:
+                    choice([UP, LEFT])
+                else:
+                    choice([UP, LEFT, DOWN])
+        elif y_coord == Y_ZERO:
+            if previous_direction != UP:
+                direction = previous_direction
+            elif previous_direction == UP:
+                direction = DOWN
+            else:
+                if x_coord == X_ZERO:
+                    choice([RIGHT, DOWN])
+                elif x_coord == X_MAX:
+                    choice([DOWN, LEFT])
+                else:
+                    choice([LEFT, RIGHT, DOWN])
+        elif y_coord == Y_MAX:
+            if previous_direction != DOWN:
+                direction = previous_direction
+            elif previous_direction == DOWN:
+                direction = UP
+            else:
+                if x_coord == X_ZERO:
+                    choice([RIGHT, UP])
+                elif x_coord == X_MAX:
+                    choice([UP, LEFT])
+                else:
+                    choice([LEFT, RIGHT, UP])
+        else:
+            direction = previous_direction
+        # Updating what direction we have tried
+        if direction not in tried_directions:
+            tried_directions.append(direction)
+        # Moving attack
+        if direction == UP:
+            y_coord -= Y_SHIFT
+        elif direction == RIGHT:
+            x_coord += X_SHIFT
+        elif direction == DOWN:
+            y_coord += Y_SHIFT
+        else:
+            x_coord -= X_SHIFT
+    # Previous attack was not successful,
+    # but a ship was hit a few attacks before
+    elif first_successful_attack != []:
+        # New direction should be based on the first_successful_attack
+        x_coord = first_successful_attack[1]
+        y_coord = first_successful_attack[0]
+        if previous_direction == UP:
+            if y_coord != Y_MAX:
+                direction = DOWN if DOWN not in tried_directions else choice([RIGHT, LEFT])
+            else:
+                direction = choice([RIGHT, LEFT])
+        elif previous_direction == RIGHT:
+            if x_coord != X_ZERO:
+                direction = LEFT if LEFT not in tried_directions else choice([UP, DOWN])
+            else:
+                direction = choice([UP, DOWN])
+        elif previous_direction == DOWN:
+            if y_coord != Y_ZERO:
+                direction = UP if UP not in tried_directions else choice([RIGHT, LEFT])
+            else:
+                direction = choice([RIGHT, LEFT])
+        elif previous_direction == LEFT:
+            if x_coord != X_MAX:
+                direction = RIGHT if RIGHT not in tried_directions else choice([UP, DOWN])
+            else:
+                direction = choice([UP, DOWN])
+        # Updating what direction we have tried
+        if direction not in tried_directions:
+            tried_directions.append(direction)
+        # Moving attack
+        if direction == UP:
+            y_coord -= Y_SHIFT
+        elif direction == RIGHT:
+            x_coord += X_SHIFT
+        elif direction == DOWN:
+            y_coord += Y_SHIFT
+        elif direction == LEFT:
+            x_coord -= X_SHIFT
+    # Don't have any clue, attack randomly
+    else:
+        new_attack = False
+        while not new_attack:
+            x_coord = X_ZERO + X_SHIFT * randint(0, 9)
+            y_coord = Y_ZERO + Y_SHIFT * randint(0, 9)
+            if ([y_coord, x_coord] in successful_attacks or
+                    [y_coord, x_coord] in missed_attacks or
+                    [y_coord, x_coord] in near_attacks):
+                continue
+            else:
+                new_attack = True
+            if y_coord == Y_ZERO:
+                if x_coord == X_ZERO:
+                    direction = choice([RIGHT, DOWN])
+                elif x_coord == X_MAX:
+                    direction = choice([DOWN, LEFT])
+                else:
+                    choice([RIGHT, DOWN, LEFT])
+            elif y_coord == Y_MAX:
+                if x_coord == X_ZERO:
+                    direction = choice([RIGHT, UP])
+                elif x_coord == X_MAX:
+                    direction = choice([UP, LEFT])
+                else:
+                    choice([RIGHT, UP, LEFT])
+            elif x_coord == X_ZERO:
+                if y_coord == Y_ZERO:
+                    direction = choice([RIGHT, DOWN])
+                elif y_coord == Y_MAX:
+                    direction = choice([UP, RIGHT])
+                else:
+                    choice([UP, RIGHT, DOWN])
+            elif x_coord == X_MAX:
+                if y_coord == Y_ZERO:
+                    direction = choice([LEFT, DOWN])
+                elif y_coord == Y_MAX:
+                    direction = choice([UP, LEFT])
+                else:
+                    choice([UP, LEFT, DOWN])
+            else:
+                direction = choice([UP, RIGHT, DOWN, LEFT])
+    return {
+        "coords": [y_coord, x_coord],
+        "direction": direction,
+        "tried directions": tried_directions
+    }
+    # IN MAIN SET THE VALUE OF first_successful_attack
