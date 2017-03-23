@@ -41,9 +41,9 @@ def ai_ship_placement(missing_ships):
             # Picking a starter coord based on origin spread and orientation
             if ship["orientation"] == HORIZONTAL:
                 origin_x = X_ZERO + X_SHIFT * randint(0, origin_spread)
-                origin_y = Y_ZERO + Y_SHIFT * randint(0, 10)
+                origin_y = Y_ZERO + Y_SHIFT * randint(0, 9)
             else:
-                origin_x = X_ZERO + X_SHIFT * randint(0, 10)
+                origin_x = X_ZERO + X_SHIFT * randint(0, 9)
                 origin_y = Y_ZERO + Y_SHIFT * randint(0, origin_spread)
             # If the coord is already occupied, the ship can't be placed anyway.
             if [origin_y, origin_x] in occupied_coords:
