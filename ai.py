@@ -85,6 +85,106 @@ def ai_ship_placement(missing_ships):
     return placed_ships
 
 
+def move_ai_attack(original_pos, direction):  # !!!
+    """
+    Change the list of Y and X coords depending on the direction.
+    """
+    y, x = original_pos
+    if direction == UP:
+        y -= Y_SHIFT
+    elif direction == RIGHT:
+        x += X_SHIFT
+    elif direction == DOWN:
+        y += Y_SHIFT
+    else:
+        x -= X_SHIFT
+
+    return (y, x)
+
+
+def second_try_ai(
+        successful_attacks, missed_attacks, near_attacks,
+        prev_coord, prev_direction, prev_success,
+        first_success_coord, unchoosen_directions, ship_sunk, hits_on_single_ship):
+    x = X_ZERO
+    y = Y_ZERO
+    direction = prev_direction
+    attack_randomly = False
+    if prev_success:  # CHECK IF TRYING TO PLACE ON OCCUPIED
+        hits_on_single_ship += 1
+        # The previous attack was a first hit on a ship
+        if first_success_coord == []:
+            first_success_coord = [prev_coord[0], prev_coord[1]]
+            direction = choice(unchoosen_directions)  # !!!
+            if direction in unchoosen_directions:
+                unchoosen_directions.remove(direction)
+            x = first_success_coord[1]
+            y = first_success_coord[0]
+            y, x = move_ai_attack([y, x], direction)  # !!!
+        # The previous attack sunk a ship
+        elif ship_sunk:
+            del first_success_coord[:]
+            unchoosen_directions = [UP, RIGHT, DOWN, LEFT]
+            hits_on_single_ship = 0
+            attack_randomly = True
+            ship_sunk = False
+        # The previuos attack is a continuation a successful attacks
+        else:
+            x = prev_coord[1]
+            y = prev_coord[0]
+            y, x = move_ai_attack([y, x], direction)  # !!!
+    # Previous wasn't a success, but there is a terget
+    elif first_success_coord != []:
+        # The correct direction wasn't
+        # choosen yet after finding a ship.
+        if hits_on_single_ship == 1:
+            direction = choice(unchoosen_directions)
+            unchoosen_directions.remove(direction)  # !!!
+            x = first_success_coord[1]
+            y = first_success_coord[0]
+            y, x = move_ai_attack([y, x], direction)
+        # Successful attacks were made, but needs to turn around
+        else:
+            if direction == UP:
+                direction = DOWN
+                unchoosen_directions.remove(DOWN)
+            elif direction == RIGHT:
+                direction = LEFT
+                unchoosen_directions.remove(LEFT)
+            elif direction == DOWN:
+                direction = UP
+                unchoosen_directions.remove(UP)
+            else:
+                direction = RIGHT
+                unchoosen_directions.remove(RIGHT)
+            x = first_success_coord[1]
+            y = first_success_coord[0]
+            y, x = move_ai_attack([y, x], direction)
+    else:
+        attack_randomly = True
+    if attack_randomly:
+        direction = None
+        made_an_attach = False
+        while not made_an_attach:
+            x += X_SHIFT * randint(0, 9)
+            y += Y_SHIFT * randint(0, 9)
+            if [y, x] in successful_attacks or [y, x] in missed_attacks:
+                continue
+            elif [y, x] in near_attacks:
+                continue
+            made_an_attach = True
+
+    return {
+        "coord": [y, x],
+        "direction": direction,
+        "first success coord": first_success_coord,
+        "unchoosen directions": unchoosen_directions,
+        "ship sunk": ship_sunk,
+        "hits on a single ship": hits_on_single_ship
+    }
+
+
+"""
 def ai_attack(
         successful_attacks, missed_attacks, near_attacks,
         previous_attack, first_successful_attack, previous_direction, tried_directions,
@@ -203,12 +303,19 @@ def ai_attack(
         while not new_attack:
             x_coord = X_ZERO + X_SHIFT * randint(0, 9)
             y_coord = Y_ZERO + Y_SHIFT * randint(0, 9)
-            if ([y_coord, x_coord] in successful_attacks or
-                    [y_coord, x_coord] in missed_attacks or
-                    [y_coord, x_coord] in near_attacks):
-                continue
+            if near_attacks is not None:
+                if ([y_coord, x_coord] in successful_attacks or
+                        [y_coord, x_coord] in missed_attacks or
+                        [y_coord, x_coord] in near_attacks):
+                    continue
+                else:
+                    new_attack = True
             else:
-                new_attack = True
+                if ([y_coord, x_coord] in successful_attacks or
+                        [y_coord, x_coord] in missed_attacks):
+                    continue
+                else:
+                    new_attack = True
             if y_coord == Y_ZERO:
                 if x_coord == X_ZERO:
                     direction = choice([RIGHT, DOWN])
@@ -245,3 +352,4 @@ def ai_attack(
         "tried directions": tried_directions
     }
     # IN MAIN SET THE VALUE OF first_successful_attack
+"""

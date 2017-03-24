@@ -133,14 +133,13 @@ def main():
         if mode_debug:
             win_condition = 2 if len(missing_ships) > 2 else win_condition
 
-        if mode_one_player:
+        """if mode_one_player:
             ai_ships = ai_ship_placement(missing_ships)
             map_ai = init_map_placed_ships(ai_ships)
             map_ai_panel = new_panel(map_ai)
             scr_refresh()
             getch()
-            endwin()
-            return
+            del ai_ships, map_ai, map_ai_panel"""
 
         # Player one ship placement
         write_text(FULL_WINDOW, "Player one's turn to place ships!")
@@ -172,7 +171,7 @@ def main():
         player_one_ships_sunk = []
         player_one_successful_attacks = []
         player_one_missed_attacks = []
-        player_one_near_attacks = [] if mode_guided else None
+        player_one_near_attacks = []
 
         # Player two variables
         map_player_two_attacks = init_map_blank()
@@ -180,15 +179,17 @@ def main():
         player_two_ships_sunk = []
         player_two_successful_attacks = []
         player_two_missed_attacks = []
-        player_two_near_attacks = [] if mode_guided else None
+        player_two_near_attacks = []
 
         # Ai variables
         if mode_one_player:
-            previous_attack = []
-            first_successful_attack = []
-            previous_direction = None
-            tried_directions = []
-            ai_sunk_a_ship = False
+            ai_unchoosen_directions = [UP, RIGHT, DOWN, LEFT]
+            ai_first_success_coord = []
+            ai_prev_coord = []
+            ai_prev_direction = None
+            ai_prev_succes = False
+            ai_ship_sunk = False
+            ai_hits_on_single_ship = 0
 
         ship_sunk = False
 
@@ -275,15 +276,18 @@ def main():
                 top_panel(text_area_panel)
 
             if mode_one_player:
-                ai_attack_return = ai_attack(
-                    player_two_successful_attacks, player_two_missed_attacks,
-                    player_two_near_attacks, previous_attack,
-                    first_successful_attack, previous_direction, tried_directions,
-                    ai_sunk_a_ship)
-                attack_coord = ai_attack_return["coords"]
-                previous_attack = attack_coord
-                previous_direction = ai_attack_return["direction"]
-                tried_directions = ai_attack_return["tried directions"]
+                ai_return = second_try_ai(
+                    player_two_successful_attacks, player_two_missed_attacks, player_two_near_attacks,
+                    ai_prev_coord, ai_prev_direction, ai_prev_succes, ai_first_success_coord,
+                    ai_unchoosen_directions, ai_ship_sunk, ai_hits_on_single_ship)
+                attack_coord = ai_return["coord"]
+                ai_prev_coord = ai_return["coord"]
+                ai_prev_direction = ai_return["direction"]
+                # ai_prev_succes
+                ai_first_success_coord = ai_return["first success coord"]
+                ai_unchoosen_directions = ai_return["unchoosen directions"]
+                ai_ship_sunk = ai_return["ship sunk"]
+                ai_hits_on_single_ship = ai_return["hits on a single ship"]
             else:
                 attack_coord = attack(
                     PLAYER_TWO, player_two_successful_attacks, player_two_missed_attacks,
@@ -299,9 +303,8 @@ def main():
                 if attack_coord in ship:
                     # Haven't already hit this spot
                     if attack_coord not in player_two_successful_attacks:
-                        if mode_one_player and len(first_successful_attack) < 1:
-                            first_successful_attack.append(attack_coord[0])
-                            first_successful_attack.append(attack_coord[1])
+                        if mode_one_player:
+                            ai_prev_succes = True
                         player_two_successful_attacks.append(attack_coord)
                         # Write attack to map_player_two_ships
                         mvwaddstr(
@@ -313,19 +316,22 @@ def main():
                         for ship_coord in ship:
                             if ship_coord not in player_two_successful_attacks:
                                 ship_sunk = False
-                                ai_sunk_a_ship = False
                                 break
                         if ship_sunk:
                             if mode_one_player:
-                                first_successful_attack = []
-                                ai_sunk_a_ship = True
+                                ai_ship_sunk = True
                             player_two_ships_sunk_count += 1
                             player_two_ships_sunk.append(ship)
                             draw_ship(map_player_one_ships, ship, CH_FULL_BLOCK, RED)
+                    else:
+                        if mode_one_player:
+                            ai_prev_succes = False
                     successful_attack = True
                     break  # Doesn't need to check further ships
 
             if not successful_attack:
+                if mode_one_player:
+                    ai_prev_succes = False
                 mvwaddstr(
                     map_player_one_ships,
                     attack_coord[0], attack_coord[1] - 1,
