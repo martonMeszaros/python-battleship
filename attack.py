@@ -74,6 +74,7 @@ def attack(
         ship_sunk_in_previous_round
 ):
     """Returns attack coordinates."""
+    all_previous_attacks = successful_attacks + missed_attacks + near_attacks
     attack_coords = update_attack(Y_ORIGIN, X_ORIGIN)
 
     if player == PLAYER_ONE:
@@ -117,8 +118,9 @@ def attack(
                 attack_coords = update_attack(attack_coords[0], attack_coords[1] - X_SHIFT)
         # Place attack
         elif user_input == 10:  # ENTER
-            clear_window(TEXT_AREA)
-            return attack_coords
+            if attack_coords not in all_previous_attacks:
+                clear_window(TEXT_AREA)
+                return attack_coords
         # Show own ships
         elif user_input == 115:  # S
             map_panel = new_panel(own_ships_map)
