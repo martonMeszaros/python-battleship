@@ -105,21 +105,56 @@ def move_ai_attack(original_pos, direction):  # !!!
 def second_try_ai(
         successful_attacks, missed_attacks, near_attacks,
         prev_coord, prev_direction, prev_success,
-        first_success_coord, unchoosen_directions, ship_sunk, hits_on_single_ship):
+        first_success_coord, unchoosen_directions, ship_sunk, hits_on_single_ship,
+        guided_coords, enemy_ships):
     x = X_ZERO
     y = Y_ZERO
     direction = prev_direction
     attack_randomly = False
     if prev_success:  # CHECK IF TRYING TO PLACE ON OCCUPIED
         hits_on_single_ship += 1
+        if len(guided_coords) > 0:  # NEEDS REWORK
+            # If a ship was hit, delete all guided coords near it,
+            # the ai won't need to check them any more.
+            for ship in enemy_ships:
+                if prev_coord in ship:
+                    for guided_coord in guided_coords:
+                        for ship_coord in ship:
+                            if (
+                                    guided_coord[0] == ship_coord[0] and (
+                                        guided_coord[1] == ship_coord[1] - X_SHIFT or
+                                        guided_coord[1] == ship_coord[1] + X_SHIFT
+                                    )
+                            ) or (
+                                    guided_coord[1] == ship_coord[1] and (
+                                        guided_coord[0] == ship_coord[0] - Y_SHIFT or
+                                        guided_coord[0] == ship_coord[0] + Y_SHIFT
+                                    )):
+                                guided_coords.remove(guided_coord)
+                    # Since we only need to clear the guided coords near the
+                    # previously hit ship, we won't need to iterate through
+                    # all the other ships
+                    break
         # The previous attack was a first hit on a ship
         if first_success_coord == []:
             first_success_coord = [prev_coord[0], prev_coord[1]]
+            unchoosen_directions = [UP, RIGHT, DOWN, LEFT]
+            # If previous attack was on a guided coord
+            # and the new attack hits, don't go back to
+            # the same coord as the previous.
+            if direction == UP:
+                unchoosen_directions.remove(DOWN)
+            elif direction == RIGHT:
+                unchoosen_directions.remove(LEFT)
+            elif direction == DOWN:
+                unchoosen_directions.remove(UP)
+            elif direction == LEFT:
+                unchoosen_directions.remove(RIGHT)
+            # Choose a "random" direction to start attacking in
             direction = choice(unchoosen_directions)  # !!!
             if direction in unchoosen_directions:
                 unchoosen_directions.remove(direction)
-            x = first_success_coord[1]
-            y = first_success_coord[0]
+            y, x = first_success_coord
             y, x = move_ai_attack([y, x], direction)  # !!!
         # The previous attack sunk a ship
         elif ship_sunk:
@@ -130,8 +165,7 @@ def second_try_ai(
             ship_sunk = False
         # The previuos attack is a continuation a successful attacks
         else:
-            x = prev_coord[1]
-            y = prev_coord[0]
+            y, x = prev_coord
             y, x = move_ai_attack([y, x], direction)  # !!!
     # Previous wasn't a success, but there is a terget
     elif first_success_coord != []:
@@ -140,8 +174,7 @@ def second_try_ai(
         if hits_on_single_ship == 1:
             direction = choice(unchoosen_directions)
             unchoosen_directions.remove(direction)  # !!!
-            x = first_success_coord[1]
-            y = first_success_coord[0]
+            y, x = first_success_coord
             y, x = move_ai_attack([y, x], direction)
         # Successful attacks were made, but needs to turn around
         else:
@@ -157,14 +190,28 @@ def second_try_ai(
             else:
                 direction = RIGHT
                 unchoosen_directions.remove(RIGHT)
-            x = first_success_coord[1]
-            y = first_success_coord[0]
+            y, x = first_success_coord
             y, x = move_ai_attack([y, x], direction)
+    # Didn't hit a ship, but previous was a guided attack.
+    elif prev_coord in near_attacks:
+        guided_coords.append(prev_coord)
+        y, x = guided_coords[0]
+        direction = choice(unchoosen_directions)  # !!!
+        unchoosen_directions.remove(direction)
+        y, x = move_ai_attack([y, x], direction)
+    # Started going to wrong direction from a guided attack
+    elif guided_coords != []:
+        direction = choice(unchoosen_directions)  # !!!
+        unchoosen_directions.remove(direction)
+        y, x = guided_coords[0]
+        y, x = move_ai_attack([y, x], direction)  # !!!
     else:
         attack_randomly = True
+    # No clue, random attack
     if attack_randomly:
         direction = None
         made_an_attach = False
+        unchoosen_directions = [UP, RIGHT, DOWN, LEFT]
         while not made_an_attach:
             x += X_SHIFT * randint(0, 9)
             y += Y_SHIFT * randint(0, 9)
@@ -180,7 +227,8 @@ def second_try_ai(
         "first success coord": first_success_coord,
         "unchoosen directions": unchoosen_directions,
         "ship sunk": ship_sunk,
-        "hits on a single ship": hits_on_single_ship
+        "hits on a single ship": hits_on_single_ship,
+        "guided coords": guided_coords
     }
 
 
