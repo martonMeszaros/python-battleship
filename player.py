@@ -1,5 +1,5 @@
 """
-player.py docstring
+Contains class for user controlled players.
 """
 from unicurses import mvwaddstr
 
