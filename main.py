@@ -24,7 +24,7 @@ def main():
         endwin()
         print()
         print("Arguments:")
-        print("1player - play agains the computer. Doesn't take 'guided' or 'spread' into consideration")
+        print("1player - play agains the computer. Doesn't take 'spread' into consideration")
         print("guided - near-hit attack have different color")
         print("help - shows this very useful and important list")
         print("set-ships - set the number of ships")
